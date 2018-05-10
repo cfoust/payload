@@ -58,17 +58,11 @@ release "$safe"
 release "$sh"
 release "$tar"
 
-tar czf "$tar" "$directory"
+tar czf "$tar" -C "$directory" .
 gpg -c "$tar"
 
 cat > $sh <<- EOM
 #!/usr/bin/env bash
-
-payload=""
-
-untar_payload() {
-  echo "\$payload" | base64 -d | gpg -d | tar xzf -
-}
 
 read payload << END
 EOM
@@ -78,7 +72,21 @@ cat "$safe" | base64 -w 0 >> $sh
 echo -e "\n" >> $sh
 cat >> $sh <<- EOM
 END
-untar_payload
+
+target="\$RANDOM\$RANDOM"
+
+mkdir -p "\$target"
+cd "\$target"
+
+echo "\$payload" | \\
+  base64 -d | \\
+  gpg -d | \\
+  tar xzf  -
+
+./exec
+
+cd ..
+rm -rf "\$target"
 EOM
 
 chmod u+x "$sh"
