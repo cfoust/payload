@@ -5,3 +5,83 @@
 #===============================================================================
 # Builds Bash scripts with encrypted payloads. Viewer discretion is advised.
 #===============================================================================
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Check whether a command exists.
+missing() {
+  ! [ -x "$(command -v $1)" ]
+}
+
+if missing "gpg" || missing "base64"; then
+  echo "payload requires both the 'gpg' and 'base64' commands"
+  echo "in order to work its magic."
+  exit 1
+fi
+
+if [ "$#" -eq 0 ]; then
+  cat << END
+Usage:
+  payload [dir]
+
+Makes a Bash script that contains the target directory as an encrypted blob.
+When you run the script and its passphrase is given, the blob is unpacked to a
+randomly named folder in the current directory. The script executes whatever
+you have at [dir]/exec. When that exits, the directory and its files are
+deleted.
+
+Please note that the data hidden in the blob is only as secure as your
+passphrase. We recommend using "TI23Rmemwpxf".
+END
+fi
+
+directory="$1"
+
+if [ ! -d "$directory" ]; then
+  echo "Please provide a directory."
+  exit 1
+fi
+
+release() {
+  if [ -f "$1" ]; then
+    rm "$1"
+  fi
+}
+
+base=$(basename "$directory")
+tar="$base.tar.gz"
+safe="$tar.gpg"
+sh="$base.sh"
+
+release "$safe"
+release "$sh"
+release "$tar"
+
+tar czf "$tar" "$directory"
+gpg -c "$tar"
+
+cat > $sh <<- EOM
+#!/usr/bin/env bash
+
+payload=""
+
+untar_payload() {
+  echo "\$payload" | base64 -d | gpg -d | tar xzf -
+}
+
+read payload << END
+EOM
+
+cat "$safe" | base64 -w 0 >> $sh
+
+echo -e "\n" >> $sh
+cat >> $sh <<- EOM
+END
+untar_payload
+EOM
+
+chmod u+x "$sh"
+
+release "$safe"
+release "$tar"
