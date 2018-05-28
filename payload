@@ -84,7 +84,7 @@ tar czf "$tar" -C "$directory" .
 if [ -z "$PAYLOAD_PHRASE" ]; then
   gpg -c "$tar"
 else
-  gpg -c "$tar" --passphrase "$PAYLOAD_PHRASE"
+  gpg --passphrase "$PAYLOAD_PHRASE" -c "$tar"
 fi
 
 cat > $sh <<- EOM
