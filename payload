@@ -81,7 +81,11 @@ release "$sh"
 release "$tar"
 
 tar czf "$tar" -C "$directory" .
-gpg -c "$tar"
+if [ -z "$PAYLOAD_PHRASE" ]; then
+  gpg -c "$tar"
+else
+  gpg -c "$tar" --passphrase "$PAYLOAD_PHRASE"
+fi
 
 cat > $sh <<- EOM
 #!/usr/bin/env bash
