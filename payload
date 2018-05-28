@@ -97,7 +97,7 @@ EOM
 cat "$safe" | base64 -w 0 >> $sh
 
 cat >> $sh <<- EOM
-END
+\nEND
 
 target="\$RANDOM\$RANDOM"
 
