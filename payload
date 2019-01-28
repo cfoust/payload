@@ -7,7 +7,7 @@
 #===============================================================================
 # MIT License
 #
-# Copyright (c) 2018 Caleb Foust
+# Copyright (c) 2019 Caleb Foust
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -96,8 +96,9 @@ EOM
 # Drop in the base64-encoded encrypted ciphertext.
 cat "$safe" | base64 -w 0 >> $sh
 
+echo -e "\nEND" >> $sh
+
 cat >> $sh <<- EOM
-\nEND
 
 target="\$RANDOM\$RANDOM"
 
